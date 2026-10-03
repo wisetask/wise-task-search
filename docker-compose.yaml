@@ -1,0 +1,27 @@
+# Опциональный compose для самостоятельного запуска сервиса поиска с собственной БД pgvector.
+# В общей инфраструктуре WiseTask используется PostgreSQL из
+# wise-task-gateway/docker-compose.yaml — тогда этот файл не нужен, достаточно
+# добавить init.sql в общую БД и передать сервису SEARCH_DB_* переменные.
+services:
+  wise-task-search-db:
+    image: pgvector/pgvector:pg17
+    container_name: wise-task-search-db
+    environment:
+      POSTGRES_USER: ${SEARCH_DB_USER:-wise_task_search}
+      POSTGRES_PASSWORD: ${SEARCH_DB_PASSWORD:-wise_task_search}
+      POSTGRES_DB: ${SEARCH_DB:-wise_task_search}
+    ports:
+      - "127.0.0.1:${SEARCH_DB_PORT:-5432}:5432"
+    volumes:
+      - wise-task-search-db:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SEARCH_DB_USER:-wise_task_search} -d ${SEARCH_DB:-wise_task_search}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  wise-task-search-db: {}

@@ -56,6 +56,11 @@ def preload_model() -> None:
     warmup_model()
 
 
+@app.on_event("shutdown")
+def close_storage() -> None:
+    storage.close()
+
+
 @app.get("/health")
 def health_check() -> dict:
     return {"status": "ok"}

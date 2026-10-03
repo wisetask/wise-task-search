@@ -2,3 +2,5 @@ fastapi
 uvicorn[standard]
 sentence-transformers
 numpy
+psycopg[binary,pool]
+pgvector
