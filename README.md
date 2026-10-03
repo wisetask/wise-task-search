@@ -44,12 +44,12 @@ docker compose up -d wise-task-search-db
 ```bash
 cd wise-task-search
 docker buildx build --platform linux/amd64 -t wise-task-search .
-docker run -d --name wise-task-search --gpus all -p 8001:8001 semantic-search-api
+docker run -d --name wise-task-search --gpus all -p 8000:8000 semantic-search-api
 ```
 
 После старта API будет доступен по адресу:
 
-- http://localhost:8001
+- http://localhost:8000
 
 Примечание: при первом запуске модель может загружаться/инициализироваться некоторое время — это нормально.
 
@@ -58,7 +58,7 @@ docker run -d --name wise-task-search --gpus all -p 8001:8001 semantic-search-ap
 ### Health check
 
 ```bash
-curl http://localhost:8001/health
+curl http://localhost:8000/health
 ```
 
 Ожидаемый ответ:
@@ -72,7 +72,7 @@ curl http://localhost:8001/health
 ### Индексация задач (bulk)
 
 ```bash
-curl -X POST http://localhost:8001/tasks/bulk \
+curl -X POST http://localhost:8000/tasks/bulk \
   -H "Content-Type: application/json" \
   -d '{
     "tasks": [
@@ -84,7 +84,7 @@ curl -X POST http://localhost:8001/tasks/bulk \
 ### Поиск задач
 
 ```bash
-curl -X POST http://localhost:8001/tasks/search \
+curl -X POST http://localhost:8000/tasks/search \
   -H "Content-Type: application/json" \
   -d '{ "query": "поиск про графы", "top_k": 3 }'
 ```
@@ -92,7 +92,7 @@ curl -X POST http://localhost:8001/tasks/search \
 ### Индексация плагинов (bulk)
 
 ```bash
-curl -X POST http://localhost:8001/plugins/bulk \
+curl -X POST http://localhost:8000/plugins/bulk \
   -H "Content-Type: application/json" \
   -d '{
     "plugins": [
@@ -111,7 +111,7 @@ curl -X POST http://localhost:8001/plugins/bulk \
 ### Поиск плагинов
 
 ```bash
-curl -X POST http://localhost:8001/plugins/search \
+curl -X POST http://localhost:800/plugins/search \
   -H "Content-Type: application/json" \
   -d '{ "query": "построение графа", "top_k": 3 }'
 ```
