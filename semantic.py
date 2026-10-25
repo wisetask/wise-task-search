@@ -7,7 +7,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from .models import PluginIn, PluginWithScore, TaskIn, TaskWithScore
-from .storage import PluginFromDB, TaskFromDB, TaskStorage
+from .storage import TaskStorage
 
 DEFAULT_MODEL_NAME = "BAAI/bge-m3"
 
@@ -44,12 +44,6 @@ def encode_text(text: str) -> np.ndarray:
     return embedding.astype(np.float32)
 
 
-def cosine_similarity(query_vec: np.ndarray, doc_vec: np.ndarray) -> float:
-    if query_vec.size == 0 or doc_vec.size == 0:
-        return 0.0
-    return float(np.dot(query_vec, doc_vec))
-
-
 class SemanticTaskSearchService:
     def __init__(self, storage: TaskStorage):
         self.storage = storage
@@ -70,23 +64,18 @@ class SemanticTaskSearchService:
             return []
 
         query_vec = encode_text(query)
-        tasks: List[TaskFromDB] = self.storage.get_all_tasks()
+        matches = self.storage.search_tasks(query_vec, top_k)
 
-        scored_tasks: List[TaskWithScore] = []
-        for task in tasks:
-            score = cosine_similarity(query_vec, task.embedding)
-            scored_tasks.append(
-                TaskWithScore(
-                    id=task.id,
-                    name=task.name,
-                    description=task.description,
-                    category=task.category,
-                    score=score,
-                )
+        return [
+            TaskWithScore(
+                id=match.id,
+                name=match.name,
+                description=match.description,
+                category=match.category,
+                score=match.score,
             )
-
-        scored_tasks.sort(key=lambda t: t.score, reverse=True)
-        return scored_tasks[: max(top_k, 0)]
+            for match in matches
+        ]
 
 
 class SemanticPluginSearchService:
@@ -118,22 +107,17 @@ class SemanticPluginSearchService:
             return []
 
         query_vec = encode_text(query)
-        plugins: List[PluginFromDB] = self.storage.get_all_plugins()
+        matches = self.storage.search_plugins(query_vec, top_k)
 
-        scored_plugins: List[PluginWithScore] = []
-        for plugin in plugins:
-            score = cosine_similarity(query_vec, plugin.embedding)
-            scored_plugins.append(
-                PluginWithScore(
-                    id=plugin.id,
-                    name=plugin.name,
-                    description=plugin.description,
-                    category=plugin.category,
-                    graphType=plugin.graph_type,
-                    pluginType=plugin.plugin_type,
-                    score=score,
-                )
+        return [
+            PluginWithScore(
+                id=match.id,
+                name=match.name,
+                description=match.description,
+                category=match.category,
+                graphType=match.graph_type,
+                pluginType=match.plugin_type,
+                score=match.score,
             )
-
-        scored_plugins.sort(key=lambda p: p.score, reverse=True)
-        return scored_plugins[: max(top_k, 0)]
+            for match in matches
+        ]
