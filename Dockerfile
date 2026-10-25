@@ -1,9 +1,5 @@
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    BGE_M3_MODEL_PATH=/app/semantic_search_api/bge_m3_model
-
 WORKDIR /app
 
 COPY requirements.txt ./requirements.txt

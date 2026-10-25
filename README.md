@@ -29,6 +29,17 @@ API принимает сущности (tasks/plugins), строит для н�
 | `SEARCH_DB_PASSWORD` | `wise_task_search` | Пароль БД |
 | `EMBEDDING_DIM` | `1024` | Размерность эмбеддингов (`BAAI/bge-m3` -> 1024) |
 
+## Аутентификация
+
+Все ручки, кроме `GET /health`, требуют действующий JWT (RS256) в заголовке `Authorization: Bearer <token>` — доступ получают любые аутентифицированные пользователи WiseTask. Токен выпускает `wise-task-gateway`; сервис проверяет подпись публичным ключом `certs/public.pem` (тот же ключ, что в gateway), срок действия и issuer.
+
+| Переменная | По умолчанию | Описание |
+| --- | --- | --- |
+| `JWT_PUBLIC_KEY` | `certs/public.pem` внутри пакета | Путь к публичному ключу RSA |
+| `JWT_ISSUER` | `wise-task` | Ожидаемый issuer токена (пустое значение отключает проверку) |
+
+Без токена или с невалидным токеном API возвращает `401`.
+
 ### Локальный запуск БД
 
 ```bash
@@ -69,11 +80,14 @@ curl http://localhost:8000/health
 
 ## Быстрые примеры
 
+Во всех примерах, кроме health check, нужен заголовок `Authorization: Bearer <token>` с access-токеном, полученным от gateway (`POST /auth/sign-in`).
+
 ### Индексация задач (bulk)
 
 ```bash
 curl -X POST http://localhost:8000/tasks/bulk \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "tasks": [
       { "id": "1", "name": "Задача про графы", "description": "описание", "category": "Graphs" }
@@ -86,14 +100,25 @@ curl -X POST http://localhost:8000/tasks/bulk \
 ```bash
 curl -X POST http://localhost:8000/tasks/search \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{ "query": "поиск про графы", "top_k": 3 }'
 ```
+
+### Удаление задачи из индекса
+
+```bash
+curl -X DELETE http://localhost:8000/tasks/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Возвращает `404`, если задачи нет в индексе.
 
 ### Индексация плагинов (bulk)
 
 ```bash
 curl -X POST http://localhost:8000/plugins/bulk \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "plugins": [
       {
@@ -113,5 +138,13 @@ curl -X POST http://localhost:8000/plugins/bulk \
 ```bash
 curl -X POST http://localhost:800/plugins/search \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{ "query": "построение графа", "top_k": 3 }'
+```
+
+### Удаление плагина из индекса
+
+```bash
+curl -X DELETE http://localhost:8000/plugins/p1 \
+  -H "Authorization: Bearer $TOKEN"
 ```

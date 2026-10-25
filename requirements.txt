@@ -4,3 +4,4 @@ sentence-transformers
 numpy
 psycopg[binary,pool]
 pgvector
+pyjwt[crypto]

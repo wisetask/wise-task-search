@@ -247,6 +247,16 @@ class TaskStorage:
                 },
             )
 
+    def delete_task(self, task_id: str) -> bool:
+        with self._get_pool().connection() as conn:
+            cursor = conn.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
+            return cursor.rowcount > 0
+
+    def delete_plugin(self, plugin_id: str) -> bool:
+        with self._get_pool().connection() as conn:
+            cursor = conn.execute("DELETE FROM plugins WHERE id = %s", (plugin_id,))
+            return cursor.rowcount > 0
+
     def search_tasks(
         self, embedding: np.ndarray, top_k: int = 3
     ) -> List[TaskMatch]:
